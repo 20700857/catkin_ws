@@ -141,6 +141,7 @@ class Car():
         #publisherFirst = rospy.Publisher('Car_Telemetries/First', Twist, queue_size=10)
         #publisherSecond= rospy.Publisher('Car_Telemetries/Second', Twist, queue_size=10)
         #publisherThird = rospy.Publisher('Car_Telemetries/Third', Twist, queue_size=10)
+        #meh
 
         #rospy.Subscriber('Car_Input', ChannelFloat32, callback)
         rospy.Subscriber('Car_Control_Position', Float64, self.callbackPosition)
