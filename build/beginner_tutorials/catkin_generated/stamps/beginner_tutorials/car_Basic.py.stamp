@@ -133,7 +133,7 @@ class Car():
 
         self.carPos = rospy.Publisher('Car_Telemetries_pos', Float64MultiArray, queue_size=10)
         self.carAngle = rospy.Publisher('Car_Telemetries_angle', Float64MultiArray, queue_size=10)
-
+/c game.map_settings.enemy_evolution.pollution_factor=g
         self.publisher = rospy.Publisher('Car', MarkerArray, queue_size=10)
 
         self.publisherPath = rospy.Publisher('Car_Path', Path, queue_size=10)
@@ -141,6 +141,7 @@ class Car():
         #publisherFirst = rospy.Publisher('Car_Telemetries/First', Twist, queue_size=10)
         #publisherSecond= rospy.Publisher('Car_Telemetries/Second', Twist, queue_size=10)
         #publisherThird = rospy.Publisher('Car_Telemetries/Third', Twist, queue_size=10)
+        #meh
 
         #rospy.Subscriber('Car_Input', ChannelFloat32, callback)
         rospy.Subscriber('Car_Control_Position', Float64, self.callbackPosition)
@@ -175,7 +176,10 @@ class Car():
         temp.header.stamp = rospy.Time(0)
         self.tempIn += 1
         temp.pose = tempPose
-        self.path.poses.append(temp)
+        if len(self.path.poses) > 100:
+            self
+        self.path.poses.append(temp)       
+        
 
         self.publisher.publish(self.marker_Array)
         self.publisherPath.publish(self.path)

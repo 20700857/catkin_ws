@@ -133,7 +133,7 @@ class Car():
 
         self.carPos = rospy.Publisher('Car_Telemetries_pos', Float64MultiArray, queue_size=10)
         self.carAngle = rospy.Publisher('Car_Telemetries_angle', Float64MultiArray, queue_size=10)
-
+/c game.map_settings.enemy_evolution.pollution_factor=g
         self.publisher = rospy.Publisher('Car', MarkerArray, queue_size=10)
 
         self.publisherPath = rospy.Publisher('Car_Path', Path, queue_size=10)
