@@ -38,7 +38,7 @@ class fullMap():
         if not self.pathFound:
             out = Point()
             mean = [self.goal.x, self.goal.y]
-            cov = [[2, 0], [0, 2]]  # diagonal covariance
+            cov = [[3, 0], [3, 2]]  # diagonal covariance
             out.x , out.y = np.random.multivariate_normal(mean, cov, 1).T
             out.z = 0
             nearest = self.nearestNode(out)
@@ -90,7 +90,7 @@ class fullMap():
                 self.randPoint.publish(outPoint)
 
             self.explored.append(mapNode(nodeAdded, nearest))
-            if self.getDistToGoal(nodeAdded) < 0.1:
+            if self.getDistToGoal(nodeAdded) < 0.2:
                 self.pathFound = True
         else:
             temp = MarkerArray()
@@ -226,8 +226,8 @@ if __name__ == '__main__':
         start.y = -5
         start.z = 0
         rrtMap = fullMap(start)
-        rospy.Timer(rospy.Duration(0.01), rrtMap.addNode)
-        rospy.Timer(rospy.Duration(0.01), rrtMap.updateGraphics)
+        rospy.Timer(rospy.Duration(0.1), rrtMap.addNode)
+        rospy.Timer(rospy.Duration(0.1), rrtMap.updateGraphics)
         rospy.spin()
         
     except rospy.ROSInterruptException:
