@@ -10,23 +10,9 @@ from std_msgs.msg import ColorRGBA
 class Unreal():
 
     def __init__(self):
-        self.subscriber = rospy.Subscriber('/Unreal', Twist, self.input_Callback)
-        # connect to the AirSim simulator 
         self.client = airsim.CarClient()
         self.client.confirmConnection()
-        self.client.enableApiControl(True)
-        self.car_controls = airsim.CarControls()
         self.publisher = rospy.Publisher('/Car', Marker, queue_size=10)
-        self.car_state = self.client.simGetVehiclePose()
-
-    def input_Callback(self,data):
-        if data.linear.x < 0 :
-            self.car_controls.brake = 1
-        else:
-            self.car_controls.brake = 0
-            self.car_controls.throttle = data.linear.x
-        self.car_controls.steering = -data.angular.z
-        self.client.setCarControls(self.car_controls)
     def publishCar(self,event =None):
         
         self.car_state = self.client.simGetVehiclePose()
@@ -40,10 +26,12 @@ class Unreal():
         addingMarker = Marker()
         addingMarker.id = 0
         addingMarker.header.frame_id = 'map'
-        addingMarker.pose.position.x = self.car_state.position.x_val
+        addingMarker.pose.position.x = self.car_state.position.x_val - 18
         addingMarker.pose.position.y = self.car_state.position.y_val
         addingMarker.pose.position.z = self.car_state.position.z_val
         addingMarker.pose.orientation.x = self.car_state.orientation.x_val
+        rospy.loginfo(self.car_state.position.x_val)
+        rospy.loginfo(self.car_state.position.y_val)
         addingMarker.pose.orientation.y = self.car_state.orientation.y_val
         addingMarker.pose.orientation.z = self.car_state.orientation.z_val
         addingMarker.pose.orientation.w = self.car_state.orientation.w_val
