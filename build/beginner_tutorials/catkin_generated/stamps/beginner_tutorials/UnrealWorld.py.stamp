@@ -28,89 +28,24 @@ class UnrealWorld():
         colourSet.b = 0.5
 
         objectPostions = []
-        #group 1
-        temp = Vector3(25,-27.5,2.5)
-        objectPostions.append(temp)
-        temp = Vector3(35,-27.5,2.5)
-        objectPostions.append(temp)
-        temp = Vector3(25,-37.5,2.5)
-        objectPostions.append(temp)
-        temp = Vector3(35,-37.5,2.5)
-        objectPostions.append(temp)
-
-        #group 2
-        temp = Vector3(-15,-57.5,2.5)
-        objectPostions.append(temp)
-
-        #group 3
-        temp = Vector3(-35,-107.5,2.5)
-        objectPostions.append(temp)
-        temp = Vector3(-35,-117.5,2.5)
-        objectPostions.append(temp)
-        temp = Vector3(-25,-107.5,2.5)
-        objectPostions.append(temp)
-        temp = Vector3(-25,-117.5,2.5)
-        objectPostions.append(temp)
-
-        #group 4
-        temp = Vector3(115,-107.5,2.5)
-        objectPostions.append(temp)
-        temp = Vector3(105,-107.5,2.5)
-        objectPostions.append(temp)
-        temp = Vector3(105,-117.5,2.5)
-        objectPostions.append(temp)
-        temp = Vector3(115,-117.5,2.5)
-        objectPostions.append(temp)
-
-        #group 5
-        temp = Vector3(75,-57.5,2.5)
-        objectPostions.append(temp)
-        temp = Vector3(75,-67.5,2.5)
-        objectPostions.append(temp)
-        temp = Vector3(85,-57.5,2.5)
-        objectPostions.append(temp)
-        temp = Vector3(85,-67.5,2.5)
-        objectPostions.append(temp)
-
-        #group 6
-        temp = Vector3(25,22.5,2.5)
-        objectPostions.append(temp)
-        temp = Vector3(25,32.5,2.5)
-        objectPostions.append(temp)
-        temp = Vector3(35,22.5,2.5)
-        objectPostions.append(temp)
-        temp = Vector3(35,32.5,2.5)
-        objectPostions.append(temp)
-
-        #group 7
-        temp = Vector3(75,52.5,2.5)
-        objectPostions.append(temp)
-        temp = Vector3(75,62.5,2.5)
-        objectPostions.append(temp)
-        temp = Vector3(85,52.5,2.5)
-        objectPostions.append(temp)
-        temp = Vector3(85,62.5,2.5)
-        objectPostions.append(temp)
-
-        #group 8
-        for x in range(3):
-            for y in range(3):
-                temp = Vector3(115- x*10,-17.5 + y*10,2.5)
+        #inside
+        for x in range(0,2):
+            for y in range(33):
+                temp = Vector3(90*x,-102 + 6*y,0)
                 objectPostions.append(temp)
-        
-        #group 9
-        temp = Vector3(-15,52.5,2.5)
-        objectPostions.append(temp)
-
-        #group 10
-        for x in range(1):
-            for y in range(1):
-                temp = Vector3(-25- x*10,102.5 + y*10,2.5)
+        for y in range(0,2):
+            for x in range(0,16):
+                temp = Vector3(6*x,-102 + 198*y,0)
                 objectPostions.append(temp)
-        #group 11
-        for x in range(1):
-            for y in range(1):
-                temp = Vector3(115- x*10,102.5 + y*10,2.5)
+
+        #outside
+        for x in range(0,2):
+            for y in range(48):
+                temp = Vector3(-42 + 180*x,-144 + 6*y,0)
+                objectPostions.append(temp)
+        for y in range(0,2):
+            for x in range(0,29):
+                temp = Vector3(-36 + 6*x,-144 + 282*y,0)
                 objectPostions.append(temp)
 
         count = 0
@@ -124,11 +59,11 @@ class UnrealWorld():
             addingMarker.pose.orientation.y = quaternionSet[1]
             addingMarker.pose.orientation.z = quaternionSet[2]
             addingMarker.pose.orientation.w = quaternionSet[3]
-            addingMarker.scale.x = 10
-            addingMarker.scale.y = 10
-            addingMarker.scale.z = 5
+            addingMarker.scale.x = 5
+            addingMarker.scale.y = 5
+            addingMarker.scale.z = 10
             addingMarker.action = addingMarker.ADD
-            addingMarker.type = addingMarker.CUBE
+            addingMarker.type = addingMarker.SPHERE
             addingMarker.color = colourSet
             self.objects.markers.append(addingMarker)
             count += 1

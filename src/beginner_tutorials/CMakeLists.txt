@@ -161,7 +161,7 @@ include_directories(
 # See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
 
 
-catkin_install_python(PROGRAMS scripts/UnrealCarTelemetry.py scripts/UnrealWorld.py scripts/RRT.py scripts/plotting.py scripts/pathPlanning.py scripts/world.py scripts/map.py scripts/world.py scripts/car.py scripts/control.py scripts/video.py scripts/car_Basic.py scripts/controlTest.py scripts/testUnreal.py
+catkin_install_python(PROGRAMS scripts/UnrealControl.py scripts/UnrealCarTelemetry.py scripts/UnrealWorld.py scripts/RRT.py scripts/plotting.py scripts/pathPlanning.py scripts/world.py scripts/map.py scripts/world.py scripts/car.py scripts/control.py scripts/video.py scripts/car_Basic.py scripts/controlTest.py scripts/testUnreal.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
