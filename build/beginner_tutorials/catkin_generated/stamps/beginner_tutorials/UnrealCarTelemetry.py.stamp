@@ -33,9 +33,9 @@ class Unreal():
         addingMarker.pose.orientation.y = self.car_state.orientation.y_val
         addingMarker.pose.orientation.z = self.car_state.orientation.z_val
         addingMarker.pose.orientation.w = -self.car_state.orientation.w_val
-        addingMarker.scale.x = 10
-        addingMarker.scale.y = 10
-        addingMarker.scale.z = 5
+        addingMarker.scale.x = 5
+        addingMarker.scale.y = 5
+        addingMarker.scale.z = 2.5
         addingMarker.action = addingMarker.ADD
         addingMarker.type = addingMarker.CUBE
         addingMarker.color = colourSet

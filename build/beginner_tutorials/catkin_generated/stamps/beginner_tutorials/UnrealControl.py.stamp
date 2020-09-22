@@ -17,9 +17,6 @@ from tf import TransformBroadcaster
 import airsim
 from std_msgs.msg import ColorRGBA
 
-headingTimeStep = 0.001
-positionTimeStep = 0.01
-
 class Control():
 
     def __init__(self):
@@ -29,11 +26,25 @@ class Control():
         self.client.enableApiControl(True)
         self.car_controls = airsim.CarControls()
 
-        self.publisher = rospy.Publisher('/Car', Marker, queue_size=10)
+        self.car_state = self.client.getCarState()
+        self.carTrans = Vector3()
+        self.carRot = Quaternion()
+
+        self.carTrans.x = 0
+        self.carTrans.y = 0
+        self.carTrans.z = 0
+
+        self.carRot.x = 0
+        self.carRot.y = 0
+        self.carRot.z = 0
+        self.carRot.w = 1
+
+        self.destination = []
 
         self.distanceDifference = 0
         self.angleDifference = 0
         self.pathIndex = 1
+        self.pathCount = 9999
 
         rospy.Subscriber("RRTPath", MarkerArray, self.getPath)
         
@@ -44,77 +55,84 @@ class Control():
 
         self.distanceThresh = 0.5
 
-        self.vConst = 0.1
-        self.wConst = 0.1
+        self.vConst = 1
+        self.wConst = 0.5
 
+        self.br = TransformBroadcaster()
         self.listener = tf.TransformListener()
+
+        self.trans = []
+        self.rot = []
 
         self.direction = True
     def getPath(self,data):
-        self.pathIndex = data
-
-    def publishCar(self,event =None):
-        
-        self.car_state = self.client.simGetVehiclePose()
-
-        colourSet = ColorRGBA()
-        colourSet.a = 1.0
-        colourSet.r = 1.0
-        colourSet.g = 0.0
-        colourSet.b = 0.0
-
-        addingMarker = Marker()
-        addingMarker.id = 0
-        addingMarker.header.frame_id = 'map'
-        addingMarker.pose.position.x = self.car_state.position.x_val - 20
-        addingMarker.pose.position.y = -self.car_state.position.y_val
-        addingMarker.pose.position.z = self.car_state.position.z_val
-        addingMarker.pose.orientation.x = self.car_state.orientation.x_val
-        addingMarker.pose.orientation.y = self.car_state.orientation.y_val
-        addingMarker.pose.orientation.z = self.car_state.orientation.z_val
-        addingMarker.pose.orientation.w = -self.car_state.orientation.w_val
-        addingMarker.scale.x = 5
-        addingMarker.scale.y = 5
-        addingMarker.scale.z = 2.5
-        addingMarker.action = addingMarker.ADD
-        addingMarker.type = addingMarker.CUBE
-        addingMarker.color = colourSet
-
-        self.publisher.publish(addingMarker)
+        self.path = data
+        self.pathCount = len(self.path.markers)
 
 
-    def getDist(self, point1, point2):
-        return math.sqrt((point1.x_val - point2.x)**2 + (point1.y_val - point2.y)**2)
+    def getDist(self, first, second):
+        return math.sqrt((first.x - second.x)**2 + (first.y - second.y)**2)
 
-    def getAngle(self, point1, point2):
-        return math.atan2(point2.y - point1.y_val,point2.x - point1.x_val)
+    def getAngle(self, first, second):
+        return math.atan2((second.y - first.y),(second.x - first.x))
 
-    def updateControl(self, event = None):
-        tempDist = self.getDist(self.car_state.position, self.path.markers[self.pathIndex].pose.position)
-        angle = self.getAngle(self.car_state.position, self.path.markers[self.pathIndex].pose.position) - self.car_state.orientation.w_val
+    def updateCarPosition(self):
+        self.car_state = self.client.getCarState()
+        self.carTrans.x = self.car_state.kinematics_estimated.position.x_val -20
+        self.carTrans.y = -self.car_state.kinematics_estimated.position.y_val
+        self.carTrans.z = self.car_state.kinematics_estimated.position.z_val
 
-        if len(self.path.markers) > 0:
-            if tempDist < 2:
-                self.pathIndex += 1
-                self.car_controls.throttle = self.vConst/2
-            else:
-                self.car_controls.throttle = self.vConst
+        self.carRot.x = self.car_state.kinematics_estimated.orientation.x_val
+        self.carRot.y = self.car_state.kinematics_estimated.orientation.y_val
+        self.carRot.z = self.car_state.kinematics_estimated.orientation.z_val
+        self.carRot.w = -self.car_state.kinematics_estimated.orientation.w_val
 
-            if angle > math.pi/18:
-                self.car_controls.steering = self.wConst
-            if angle < -math.pi/18:
-                self.car_controls.steering = -self.wConst
+        self.br.sendTransform((self.carTrans.x, self.carTrans.y, 0),(self.carRot.x,self.carRot.y,self.carRot.z, self.carRot.w),rospy.Time.now(),"Car","map")
 
-            self.client.setCarControls(self.car_controls)
+    def updateTarget(self):
+        self.destination = self.path.markers[self.pathCount - self.pathIndex].points[0]
+        self.br.sendTransform((self.destination.x, self.destination.y, 0),(self.carRot.x,self.carRot.y,self.carRot.z, self.carRot.w),rospy.Time.now(),"Target","map") 
+
+    def updateControl(self, event = None):  
+
+        while not rospy.is_shutdown():
+            self.updateCarPosition()
+            self.updateTarget()
+
+            tempDist = self.getDist(self.carTrans, self.destination)
+            angle = self.getAngle(self.carTrans, self.destination)
+            #rospy.loginfo(self.getAngle(self.carTrans, self.destination))
+            #rospy.loginfo("Car")
+            #rospy.loginfo(self.carRot.w)
+            rospy.loginfo("Difference")
+            rospy.loginfo(angle - self.carRot.w)
+
+
+            if len(self.path.markers) > 0:
+                if tempDist < 2:
+                    self.pathIndex += 1
+                    self.car_controls.throttle = 0 #self.vConst/2
+                else:
+                    if self.car_state.speed > 2:
+                        self.car_controls.throttle = 0
+                    else:
+                        self.car_controls.throttle = 0.2 #0.2 #self.vConst
+                    
+
+                if angle - self.carRot.w > 0:
+                    self.car_controls.steering = -self.wConst
+                if angle - self.carRot.w < 0:
+                    self.car_controls.steering = self.wConst
+
+                self.client.setCarControls(self.car_controls)
 
 
 if __name__ == '__main__':
     try:
         rospy.init_node('Control', anonymous=True)
         control = Control()
-
-        rospy.Timer(rospy.Duration(0.1), control.publishCar)
-        rospy.Timer(rospy.Duration(0.01), control.updateControl)
+        rospy.sleep(1)
+        control.updateControl()
         rospy.spin()
     except rospy.ROSInterruptException:
         pass

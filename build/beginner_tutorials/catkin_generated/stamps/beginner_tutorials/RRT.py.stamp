@@ -120,7 +120,7 @@ class fullMap():
                     self.randPoint.publish(outPoint)
 
                 self.explored.append(mapNode(nodeAdded, nearest, nearest.cost + self.delta))
-                if self.getDistToGoal(nodeAdded) < 2:
+                if self.getDistToGoal(nodeAdded) < 3:
                     self.pathFound = True
         else:
             temp = MarkerArray()
@@ -257,7 +257,7 @@ if __name__ == '__main__':
     try:
         rospy.init_node('Map', anonymous=True)
         start = Vector3()
-        start.x = -15
+        start.x = -20
         start.y = 0
         start.z = 0
         rrtMap = fullMap(start)

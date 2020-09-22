@@ -1,47 +1,52 @@
 
 import rospy
 import numpy as np
-from cv_bridge import CvBridge # Package to convert between ROS and OpenCV Images
 from sensor_msgs.msg import Image # Image is the message type
 import cv2 # OpenCV library
+import airsim
+from cv_bridge import CvBridge
+import matplotlib.pyplot as plt
+import os.path 
 
+class videoIn():
 
+    def __init__(self):
+        self.client = airsim.CarClient()
+        self.client.confirmConnection()
+        self.image_pub = rospy.Publisher("/image_topic_2", Image, queue_size=10)
+        self.bridge = CvBridge()
 
-def videoIn():
+    def publishImage(self, event = None):
+        responses = self.client.simGetImages([airsim.ImageRequest("0", airsim.ImageType.Scene, False, False)])
+        response = responses[0]
+        
+        # get numpy array
+        img1d = np.fromstring(response.image_data_uint8, dtype=np.uint8) 
 
+        # reshape array to 4 channel image array H X W X 4
+        img_rgb = img1d.reshape(response.height, response.width, 3)
 
-    pub = rospy.Publisher('video_frames', Image, queue_size=10)
+        output_image = Image()
+        output_image.header.stamp = rospy.Time.now()
+        output_image.height = response.height
+        output_image.width = response.width
+        output_image.encoding = "rgb8"
+        output_image.is_bigendian = 0
+        output_image.step = 3 * response.height
+        output_image.data = img1d
+        self.image_pub.publish(self.bridge.cv2_to_imgmsg(img_rgb, "bgr8"))
 
-    cap = cv2.VideoCapture(0)
+        img_CV2 = cv2.imread(response.image_data_uint8)
 
-    br = CvBridge()
-
-    face_cascade = cv2.CascadeClassifier('/home/raynhardt/catkin_ws/src/beginner_tutorials/include/beginner_tutorials/haarcascade_frontalface_default.xml')
-
-    while not rospy.is_shutdown():
-     
-      # Capture frame-by-frame
-      # This method returns True/False as well
-      # as the video frame.
-        _, img = cap.read()
-
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-         
-        # Detect the faces
-        faces = face_cascade.detectMultiScale(gray, 1.1, 4)
-
-        # Draw the rectangle around each face
-        for (x, y, w, h) in faces:
-            cv2.rectangle(img, (x, y), (x+w, y+h), (255, 0, 0), 2)
-
-        # Display
-        pub.publish(br.cv2_to_imgmsg(img))
-        rospy.sleep(0.01)
+        plt.imshow(img_rgb)
+        plt.show()
 
 
 if __name__ == '__main__':
     try:
         rospy.init_node('video_pub_py', anonymous=True)
-        videoIn()
+        videoClass = videoIn()
+        rospy.Timer(rospy.Duration(1), videoClass.publishImage)
+        rospy.spin()
     except rospy.ROSInterruptException:
         pass
