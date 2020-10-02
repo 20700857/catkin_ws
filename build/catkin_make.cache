@@ -1,2 +1,2 @@
-beginner_tutorials:cv_basics
+beginner_tutorials:car:controllers:path_planners:world_maps
 -DCATKIN_DEVEL_PREFIX=/home/raynhardt/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/raynhardt/catkin_ws/install -G Unix Makefiles

@@ -5,5 +5,8 @@
 # This file includes the relevant testing commands required for 
 # testing this directory and lists subdirectories to be tested as well.
 subdirs("gtest")
-subdirs("cv_basics")
+subdirs("car")
+subdirs("controllers")
+subdirs("path_planners")
 subdirs("beginner_tutorials")
+subdirs("world_maps")

@@ -1,0 +1,8 @@
+prefix=/home/raynhardt/catkin_ws/install
+
+Name: path_planners
+Description: Description of path_planners
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
