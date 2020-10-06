@@ -53,6 +53,10 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/path_planners" TYPE PROGRAM FILES "/home/raynhardt/catkin_ws/build/path_planners/catkin_generated/installspace/RRT.py")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/path_planners" TYPE PROGRAM FILES "/home/raynhardt/catkin_ws/build/path_planners/catkin_generated/installspace/RRT*.py")
+endif()
+
+if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/path_planners" TYPE PROGRAM FILES "/home/raynhardt/catkin_ws/build/path_planners/catkin_generated/installspace/A*.py")
 endif()
 

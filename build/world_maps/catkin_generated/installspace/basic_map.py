@@ -27,30 +27,11 @@ class BasicWorld():
         colourSet.g = 0.5
         colourSet.b = 0.5
 
-        objectPostions = []
-        #inside
-        for x in range(0,2):
-            for y in range(33):
-                temp = Vector3(90*x,-102 + 6*y,0)
-                objectPostions.append(temp)
-        for y in range(0,2):
-            for x in range(0,16):
-                temp = Vector3(6*x,-102 + 198*y,0)
-                objectPostions.append(temp)
-
-        #outside
-        for x in range(0,2):
-            for y in range(48):
-                temp = Vector3(-42 + 180*x,-144 + 6*y,0)
-                objectPostions.append(temp)
-        for y in range(0,2):
-            for x in range(0,29):
-                temp = Vector3(-36 + 6*x,-144 + 282*y,0)
-                objectPostions.append(temp)
-
+        self.objectPostions = []
+        self.createMap()
         count = 0
 
-        for x in objectPostions:
+        for x in self.objectPostions:
             addingMarker = Marker()
             addingMarker.id = count
             addingMarker.header.frame_id = 'map'
@@ -59,8 +40,8 @@ class BasicWorld():
             addingMarker.pose.orientation.y = quaternionSet[1]
             addingMarker.pose.orientation.z = quaternionSet[2]
             addingMarker.pose.orientation.w = quaternionSet[3]
-            addingMarker.scale.x = 5
-            addingMarker.scale.y = 5
+            addingMarker.scale.x = 10
+            addingMarker.scale.y = 10
             addingMarker.scale.z = 10
             addingMarker.action = addingMarker.ADD
             addingMarker.type = addingMarker.SPHERE
@@ -68,6 +49,22 @@ class BasicWorld():
             self.objects.markers.append(addingMarker)
             count += 1
 
+    def createMap(self):
+        runs = 0
+        for z1 in range(0,2):
+            for z2 in range(90 +90*z1):
+                x = math.sin(math.radians(z2*(4-2*z1)))*(150.0+150.0*z1)
+                y = math.cos(math.radians(z2*(4-2*z1)))*(150.0+150.0*z1)
+                temp = Vector3(x,y,0.0)
+                self.objectPostions.append(temp)
+                runs += 1
+
+
+    def createSide(self, X1,X2,Y1,Y2, step):
+        for x in range(X1,X2 + step,step):
+            for y in range(Y1,Y2 + step,step):
+                temp = Vector3(x,y,0)
+                self.objectPostions.append(temp)
 
     def outputMap(self, event=None):
 
@@ -78,6 +75,7 @@ if __name__ == '__main__':
     try:
         rospy.init_node('Basic_World', anonymous=True)
         output = BasicWorld()
+        
 
         rospy.Timer(rospy.Duration(1), output.outputMap)
 

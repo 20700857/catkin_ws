@@ -152,7 +152,7 @@ include_directories(
 #############
 ## Install ##
 #############
-catkin_install_python(PROGRAMS scripts/RRT.py
+catkin_install_python(PROGRAMS scripts/RRT*.py scripts/A*.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

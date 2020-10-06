@@ -56,3 +56,7 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/world_maps" TYPE PROGRAM FILES "/home/raynhardt/catkin_ws/build/world_maps/catkin_generated/installspace/basic_map.py")
 endif()
 
+if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/world_maps" TYPE PROGRAM FILES "/home/raynhardt/catkin_ws/build/world_maps/catkin_generated/installspace/advanced_map.py")
+endif()
+

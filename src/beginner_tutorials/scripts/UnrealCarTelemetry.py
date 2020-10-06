@@ -26,19 +26,23 @@ class Unreal():
         addingMarker = Marker()
         addingMarker.id = 0
         addingMarker.header.frame_id = 'map'
-        addingMarker.pose.position.x = self.car_state.position.x_val - 20
-        addingMarker.pose.position.y = -self.car_state.position.y_val
-        addingMarker.pose.position.z = self.car_state.position.z_val
+        addingMarker.pose.position.x = (self.car_state.position.x_val*100)/10
+        addingMarker.pose.position.y = -(self.car_state.position.y_val*100 - 2000)/10
+        # rospy.loginfo(self.car_state.position.x_val*100)
+        # rospy.loginfo(self.car_state.position.y_val*100 - 2000)
+        # rospy.loginfo("")
+        addingMarker.pose.position.z = (self.car_state.position.z_val*100)/10
         addingMarker.pose.orientation.x = self.car_state.orientation.x_val
         addingMarker.pose.orientation.y = self.car_state.orientation.y_val
         addingMarker.pose.orientation.z = self.car_state.orientation.z_val
         addingMarker.pose.orientation.w = -self.car_state.orientation.w_val
-        addingMarker.scale.x = 5
-        addingMarker.scale.y = 5
+        addingMarker.scale.x = 40
+        addingMarker.scale.y = 20
         addingMarker.scale.z = 2.5
         addingMarker.action = addingMarker.ADD
         addingMarker.type = addingMarker.CUBE
         addingMarker.color = colourSet
+        addingMarker.lifetime = rospy.Time(1)
 
         self.publisher.publish(addingMarker)
 

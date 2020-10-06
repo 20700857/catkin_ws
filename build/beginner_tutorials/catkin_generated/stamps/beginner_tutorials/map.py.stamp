@@ -76,6 +76,7 @@ class fullMap():
 
                 node = mapNode(pos,x ,y)
                 self.map[x].append(node)
+                
     def obstacleCreate(self, num):
 
         for z in range(num):

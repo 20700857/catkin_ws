@@ -40,8 +40,8 @@ class BasicWorld():
             addingMarker.pose.orientation.y = quaternionSet[1]
             addingMarker.pose.orientation.z = quaternionSet[2]
             addingMarker.pose.orientation.w = quaternionSet[3]
-            addingMarker.scale.x = 10
-            addingMarker.scale.y = 10
+            addingMarker.scale.x = 5
+            addingMarker.scale.y = 5
             addingMarker.scale.z = 10
             addingMarker.action = addingMarker.ADD
             addingMarker.type = addingMarker.SPHERE
@@ -50,19 +50,46 @@ class BasicWorld():
             count += 1
 
     def createMap(self):
+
         for z1 in range(0,2):
-            for z2 in range(90 +90*z1):
+            for z2 in range(int((90 +90*z1)/2),90 +90*z1):
                 x = math.sin(math.radians(z2*(4-2*z1)))*(150.0+150.0*z1)
                 y = math.cos(math.radians(z2*(4-2*z1)))*(150.0+150.0*z1)
                 temp = Vector3(x,y,0.0)
                 self.objectPostions.append(temp)
 
-
-    def createSide(self, X1,X2,Y1,Y2, step):
-        for x in range(X1,X2 + step,step):
-            for y in range(Y1,Y2 + step,step):
-                temp = Vector3(x,y,0)
+        for z1 in range(-2,2):
+            if not z1 == 0:
+                for z2 in range(0,60 + 15*z1):
+                    x = 10*z2
+                    y = 150*(z1)
+                    temp = Vector3(x,y,0.0)
+                    self.objectPostions.append(temp)
+            else:
+                for z2 in range(0,15):
+                    x = 900 - 10*z2
+                    y = 0.0
+                    temp = Vector3(x,y,0.0)
+                    self.objectPostions.append(temp)
+        
+        for z1 in range(-1,1):
+            if not z1 == 0:
+                for z2 in range(0,4):
+                    x = 150*z2
+                    y = 225*z1
+                    temp = Vector3(x,y,0.0)
+                    self.objectPostions.append(temp)
+        
+        for z1 in range(0,1):
+            for z2 in range(-15 -15*z1, 15 + 15*z1):
+                x = 600 + 300*z1
+                y = 10*z2
+                temp = Vector3(x,y,0.0)
                 self.objectPostions.append(temp)
+                      
+    
+                
+
 
     def outputMap(self, event=None):
 
