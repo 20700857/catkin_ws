@@ -40,12 +40,13 @@ class BasicWorld():
             addingMarker.pose.orientation.y = quaternionSet[1]
             addingMarker.pose.orientation.z = quaternionSet[2]
             addingMarker.pose.orientation.w = quaternionSet[3]
-            addingMarker.scale.x = 5
-            addingMarker.scale.y = 5
+            addingMarker.scale.x = 10
+            addingMarker.scale.y = 10
             addingMarker.scale.z = 10
             addingMarker.action = addingMarker.ADD
             addingMarker.type = addingMarker.SPHERE
             addingMarker.color = colourSet
+            addingMarker.lifetime = rospy.Time(10)
             self.objects.markers.append(addingMarker)
             count += 1
 
@@ -58,30 +59,30 @@ class BasicWorld():
                 temp = Vector3(x,y,0.0)
                 self.objectPostions.append(temp)
 
-        for z1 in range(-2,2):
+        for z1 in range(-2,2 + 1):
             if not z1 == 0:
-                for z2 in range(0,60 + 15*z1):
+                for z2 in range(0,60 + 15*abs(z1) + 1):
                     x = 10*z2
                     y = 150*(z1)
                     temp = Vector3(x,y,0.0)
                     self.objectPostions.append(temp)
             else:
-                for z2 in range(0,15):
+                for z2 in range(0,15 + 1):
                     x = 900 - 10*z2
                     y = 0.0
                     temp = Vector3(x,y,0.0)
                     self.objectPostions.append(temp)
         
-        for z1 in range(-1,1):
+        for z1 in range(-1,1 + 1):
             if not z1 == 0:
-                for z2 in range(0,4):
+                for z2 in range(0,4 + 1):
                     x = 150*z2
                     y = 225*z1
                     temp = Vector3(x,y,0.0)
                     self.objectPostions.append(temp)
         
-        for z1 in range(0,1):
-            for z2 in range(-15 -15*z1, 15 + 15*z1):
+        for z1 in range(0,1 + 1):
+            for z2 in range(-15 -15*z1, 15 + 15*z1 + 1):
                 x = 600 + 300*z1
                 y = 10*z2
                 temp = Vector3(x,y,0.0)

@@ -10,9 +10,6 @@ import rospy
 import airsim
 from visualization_msgs.msg import MarkerArray
 from visualization_msgs.msg import Marker
-from geometry_msgs.msg import PoseStamped
-from geometry_msgs.msg import Pose
-from nav_msgs.msg import Path
 
 # Parameters
 k = 0.1  # look forward gain
@@ -23,10 +20,6 @@ WB = 2.9  # [m] wheel base of vehicle
 
 show_animation = True
 
-
-client = airsim.CarClient()
-client.confirmConnection()
-car_controls = airsim.CarControls()
 
 class State:
 
@@ -39,16 +32,10 @@ class State:
         self.rear_y = self.y - ((WB / 2) * math.sin(self.yaw))
 
     def update(self, a, delta):
-
-        car_state = client.getCarState()
-        self.x = car_state.kinematics_estimated.position.x_val
-        # self.x += self.v * math.cos(self.yaw) * dt
-        self.y = -car_state.kinematics_estimated.position.y_val
-        # self.y += self.v * math.sin(self.yaw) * dt
-        self.yaw = -car_state.kinematics_estimated.orientation.w_val
-        # self.yaw += self.v / WB * math.tan(delta) * dt
-        self.v = car_state.speed
-        # self.v += a * dt
+        self.x += self.v * math.cos(self.yaw) * dt
+        self.y += self.v * math.sin(self.yaw) * dt
+        self.yaw += self.v / WB * math.tan(delta) * dt
+        self.v += a * dt
         self.rear_x = self.x - ((WB / 2) * math.cos(self.yaw))
         self.rear_y = self.y - ((WB / 2) * math.sin(self.yaw))
 
@@ -143,40 +130,39 @@ def pure_pursuit_steer_control(state, trajectory, pind):
     return delta, ind
 
 
-class mainPart:
+def plot_arrow(x, y, yaw, length=1.0, width=0.5, fc="r", ec="k"):
+    """
+    Plot arrow
+    """
+
+    if not isinstance(x, float):
+        for ix, iy, iyaw in zip(x, y, yaw):
+            plot_arrow(ix, iy, iyaw)
+    else:
+        plt.arrow(x, y, length * math.cos(yaw), length * math.sin(yaw),
+                  fc=fc, ec=ec, head_width=width, head_length=width)
+        plt.plot(x, y)
+
+
+class main():
 
     def __init__(self):
 
         
         # self.client = airsim.CarClient()
         # self.client.confirmConnection()
+        self.subscriber = rospy.Subscriber('/Path_Solution_Points', MarkerArray, self.updateCourse)
         self.controlOut = rospy.Publisher('/Control_Out', MarkerArray, queue_size=10)
-        self.controlOutPath = rospy.Publisher('/Control_Out_Path', Path, queue_size=10)
-        self.path = Path()
-        self.pathLoop = 0
-
-        self.path.header.frame_id = 'map'
-        self.path.header.stamp = rospy.Time(0)
-
         self.gotPath = False
 
         self.target_speed = 10.0 / 3.6  # [m/s]
 
-        self.T = 10000.0  # max simulation time
+        self.T = 100.0  # max simulation time
 
         self.cx = []
         self.cy = []
         # initial state
-        self.state = State(x=-225, y=0, yaw=0.0, v=0.0)
-
-        data = MarkerArray()
-        data = rospy.wait_for_message('/Path_Solution_Points', MarkerArray)
-
-        for point in data.markers:
-            self.cx.append(point.pose.position.x)
-            self.cy.append(point.pose.position.y)
-        self.cx.reverse()
-        self.cy.reverse()
+        self.state = State(x=-0.0, y=-3.0, yaw=0.0, v=0.0)
 
         self.lastIndex = len(self.cx) - 1
         self.time = 0.0
@@ -184,82 +170,98 @@ class mainPart:
         self.states.append(self.time, self.state)
         self.target_course = TargetCourse(self.cx, self.cy)
         self.target_ind, _ = self.target_course.search_target_index(self.state)
+    
+    def updateCourse(self,data):
+        #  target course
+        rospy.loginfo("Meh")
+        for point in data.markers:
+            self.cx.append(point.pose.position.x)
+            self.cx.append(point.pose.position.y)
+        self.gotPath = True
 
     def mainLoop(self, event = None):
 
         while self.T >= self.time and self.lastIndex > self.target_ind:
+            if not self.gotPath:
 
-            # Calc control input
-            ai = proportional_control(self.target_speed, self.state.v)
-            di, self.target_ind = pure_pursuit_steer_control(
-                self.state, self.target_course, self.target_ind)
+                # Calc control input
+                ai = proportional_control(self.target_speed, self.state.v)
+                di, self.target_ind = pure_pursuit_steer_control(
+                    self.state, self.target_course, self.target_ind)
 
-            self.state.update(ai, di)  # Control vehicle
+                self.state.update(ai, di)  # Control vehicle
 
-            self.time += dt
-            self.states.append(self.time, self.state)
+                self.time += dt
+                self.states.append(self.time, self.state)
 
+                if show_animation:  # pragma: no cover
 
-            if show_animation:  # pragma: no cover
+                    outMarkers = MarkerArray()
 
-                outMarkers = MarkerArray()
+                    mapMarker = Marker()
+                    mapMarker.id = 0
+                    mapMarker.header.frame_id = "map"
+                    mapMarker.type = mapMarker.SPHERE
+                    mapMarker.action = mapMarker.ADD
+                    mapMarker.scale.x = 5
+                    mapMarker.scale.y = 5
+                    mapMarker.scale.z = 5
+                    mapMarker.pose.position.z = 0
+                    mapMarker.pose.position.x = self.state.x
+                    mapMarker.pose.position.y = self.state.y
+                    mapMarker.color.a = 1.0
+                    mapMarker.color.r = 0.0
+                    mapMarker.color.g = 0.0
+                    mapMarker.color.b = 1.0
+                    mapMarker.lifetime = rospy.Time(5)
 
-                mapMarker = Marker()
-                mapMarker.id = 0
-                mapMarker.header.frame_id = "map"
-                mapMarker.type = mapMarker.SPHERE
-                mapMarker.action = mapMarker.ADD
-                mapMarker.scale.x = 5
-                mapMarker.scale.y = 5
-                mapMarker.scale.z = 5
-                mapMarker.pose.position.z = 0
-                mapMarker.pose.position.x = self.state.x
-                mapMarker.pose.position.y = self.state.y
-                mapMarker.color.a = 1.0
-                mapMarker.color.r = 0.0
-                mapMarker.color.g = 0.0
-                mapMarker.color.b = 1.0
-                mapMarker.lifetime = rospy.Time(5)
+                    outMarkers.markers.append(mapMarker)
 
-                outMarkers.markers.append(mapMarker)
+                    mapMarker = Marker()
+                    mapMarker.id = 1
+                    mapMarker.header.frame_id = "map"
+                    mapMarker.type = mapMarker.SPHERE
+                    mapMarker.action = mapMarker.ADD
+                    mapMarker.scale.x = 5
+                    mapMarker.scale.y = 5
+                    mapMarker.scale.z = 5
+                    mapMarker.pose.position.z = 0
+                    mapMarker.pose.position.x = self.cx[self.target_ind]
+                    mapMarker.pose.position.y = self.cy[self.target_ind]
+                    mapMarker.color.a = 1.0
+                    mapMarker.color.r = 0.0
+                    mapMarker.color.g = 0.0
+                    mapMarker.color.b = 1.0
+                    mapMarker.lifetime = rospy.Time(5)
 
-                mapMarker = Marker()
-                mapMarker.id = 1
-                mapMarker.header.frame_id = "map"
-                mapMarker.type = mapMarker.SPHERE
-                mapMarker.action = mapMarker.ADD
-                mapMarker.scale.x = 5
-                mapMarker.scale.y = 5
-                mapMarker.scale.z = 5
-                mapMarker.pose.position.z = 0
-                mapMarker.pose.position.x = self.cx[self.target_ind]
-                mapMarker.pose.position.y = self.cy[self.target_ind]
-                mapMarker.color.a = 1.0
-                mapMarker.color.r = 1.0
-                mapMarker.color.g = 0.0
-                mapMarker.color.b = 0.0
-                mapMarker.lifetime = rospy.Time(5)
+                    outMarkers.markers.append(mapMarker)
 
-                outMarkers.markers.append(mapMarker)
+                    mapMarker = Marker()
+                    mapMarker.id = 1
+                    mapMarker.header.frame_id = "map"
+                    mapMarker.type = mapMarker.SPHERE
+                    mapMarker.action = mapMarker.ADD
+                    mapMarker.scale.x = 5
+                    mapMarker.scale.y = 5
+                    mapMarker.scale.z = 5
+                    mapMarker.pose.position.z = 0
+                    mapMarker.pose.position.x = self.states.x
+                    mapMarker.pose.position.y = self.states.y
+                    mapMarker.color.a = 1.0
+                    mapMarker.color.r = 0.0
+                    mapMarker.color.g = 0.0
+                    mapMarker.color.b = 1.0
+                    mapMarker.lifetime = rospy.Time(5)
 
-                self.controlOut.publish(outMarkers)
+                    outMarkers.markers.append(mapMarker)
 
-                temp = PoseStamped()
-                tempPose = Pose()
-                tempPose.position.z = 0
-                tempPose.position.x = self.state.x
-                tempPose.position.y = self.state.y
-                temp.header.frame_id = "Path: " + str(self.pathLoop)
-                temp.header.stamp = rospy.Time(0)
-                self.pathLoop += 1
-                temp.pose = tempPose
-                self.path.poses.append(temp)
-                self.controlOutPath.publish(self.path)
-
-                plt.pause(0.001)
+                    self.controlOut.publish(outMarkers)
+                    rospy.loginfo("MEh")
+                    plt.pause(0.001)
 
 
 if __name__ == '__main__':
     rospy.init_node('Controller', anonymous=True)
-    controller = mainPart()
+    print("Pure pursuit path tracking simulation start")
+    controller = main()
     controller.mainLoop()

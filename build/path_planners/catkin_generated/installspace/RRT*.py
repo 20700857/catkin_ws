@@ -25,9 +25,9 @@ class fullMap():
 
     def __init__(self,start):
         self.goals = []
-        self.goals.append(Point(60,60,0))
-        self.rangeX = 500
-        self.rangeY = 500
+        self.goals.append(Point(650,0,0))
+        self.rangeX = 1500
+        self.rangeY = 1500
 
         self.currentGoal = 0
         self.explored = []
@@ -88,7 +88,7 @@ class fullMap():
                     
                 newNode = mapNode(nodeAdded, nearest, nearest.cost + self.delta)
                 self.explored.append(newNode)
-                self.checkForBetter(newNode)
+                # self.checkForBetter(newNode)
                 if self.getDistToGoal(nodeAdded) < 3:
                     self.pathFound = True
                     self.generatePath()
@@ -323,7 +323,7 @@ if __name__ == '__main__':
     try:
         rospy.init_node('Map', anonymous=True)
         start = Vector3()
-        start.x = -25.0
+        start.x = -225.0
         start.y = 0.0
         start.z = 0.0
         rrtMap = fullMap(start)

@@ -52,3 +52,7 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/controllers" TYPE FILE FILES "/home/raynhardt/catkin_ws/src/controllers/package.xml")
 endif()
 
+if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/controllers" TYPE PROGRAM FILES "/home/raynhardt/catkin_ws/build/controllers/catkin_generated/installspace/pure_pursuit.py")
+endif()
+

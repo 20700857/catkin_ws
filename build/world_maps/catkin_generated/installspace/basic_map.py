@@ -50,14 +50,12 @@ class BasicWorld():
             count += 1
 
     def createMap(self):
-        runs = 0
         for z1 in range(0,2):
             for z2 in range(90 +90*z1):
                 x = math.sin(math.radians(z2*(4-2*z1)))*(150.0+150.0*z1)
                 y = math.cos(math.radians(z2*(4-2*z1)))*(150.0+150.0*z1)
                 temp = Vector3(x,y,0.0)
                 self.objectPostions.append(temp)
-                runs += 1
 
 
     def createSide(self, X1,X2,Y1,Y2, step):

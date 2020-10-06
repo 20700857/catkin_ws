@@ -68,6 +68,7 @@ class fullMap():
 
     def getPath(self,current):
         
+        rospy.loginfo("Got path")
         self.path.header.frame_id = 'map'
         self.path.header.stamp = rospy.Time(0)
 
@@ -82,9 +83,9 @@ class fullMap():
             mapMarker.header.frame_id = "map"
             mapMarker.type = mapMarker.SPHERE
             mapMarker.action = mapMarker.ADD
-            mapMarker.scale.x = 0.5
-            mapMarker.scale.y = 0.5
-            mapMarker.scale.z = 0.5
+            mapMarker.scale.x = 1
+            mapMarker.scale.y = 1
+            mapMarker.scale.z = 1
             mapMarker.pose.position.z = 0
             mapMarker.pose.position.x = backTrack.position.x
             mapMarker.pose.position.y = backTrack.position.y
@@ -340,7 +341,7 @@ if __name__ == '__main__':
         start.z = 0.0
 
         finish = Vector3()
-        finish.x = 650
+        finish.x = 225
         finish.y = 0.0
         finish.z = 0.0
         full_Map.findPath(start,finish)

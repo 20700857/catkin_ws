@@ -41,6 +41,7 @@ set(CMAKE_MAKEFILE_DEPENDS
   "/home/raynhardt/catkin_ws/src/car/scripts/car_telemetries.py"
   "/home/raynhardt/catkin_ws/src/controllers/CMakeLists.txt"
   "/home/raynhardt/catkin_ws/src/controllers/package.xml"
+  "/home/raynhardt/catkin_ws/src/controllers/scripts/pure_pursuit.py"
   "/home/raynhardt/catkin_ws/src/path_planners/CMakeLists.txt"
   "/home/raynhardt/catkin_ws/src/path_planners/package.xml"
   "/home/raynhardt/catkin_ws/src/path_planners/scripts/A*.py"
