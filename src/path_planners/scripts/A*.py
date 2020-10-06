@@ -105,7 +105,6 @@ class fullMap():
             temp.header.stamp = rospy.Time(0)
             tempIn += 1
             temp.pose = tempPose
-            temp.
             self.path.poses.append(temp)
             backTrack = backTrack.parent
 
