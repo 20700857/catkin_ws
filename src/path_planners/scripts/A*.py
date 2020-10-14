@@ -13,6 +13,11 @@ from tf import TransformBroadcaster
 import tf2_ros
 from random import random
 import numpy as np
+import time
+
+distanceLog = []
+timeLog = []
+
 class mapNode():
     def __init__(self, position):
         self.position = position
@@ -22,21 +27,26 @@ class mapNode():
 
 class fullMap():
 
-    def __init__(self):
-        self.size = 0
+    def __init__(self, goals):
+        self.resetCounter = -1
+        self.goals = goals
+        self.reset()
+
         self.openList = []
         self.finish = Vector3()
+        self.start = Vector3()
         self.closedList = []
+        
 
         self.pathSearchPublisher = rospy.Publisher('/Path_Searching', MarkerArray, queue_size=10)
         self.pathSolutionPublisherMarkers = rospy.Publisher('/Path_Solution_Points', MarkerArray, queue_size=10)
         self.pathSolutionPublisher = rospy.Publisher('/Path_Solution', Path, queue_size=10)
 
         self.path = Path()
+        self.path.header.frame_id = 'map'
+        self.path.header.stamp = rospy.Time(0)
         self.pathMarkers = MarkerArray()
 
-        self.pathfound = False
-        self.pathDrawn = False
 
         self.quaternionSet = Quaternion()
         self.quaternionSet = tf.transformations.quaternion_from_euler(0.0, 0.0, 0.0)
@@ -44,10 +54,11 @@ class fullMap():
         self.objects = MarkerArray()
         self.subscriber = rospy.Subscriber('/Obstacles', MarkerArray, self.updateObjects)
 
-        self.delta = 2.0
+        self.delta = 5.0
 
-        self.received = False
-        self.started = False
+        self.lastPoint = self.goals[self.goalIncrement]
+
+        
 
     def updateObjects(self, data):
         if not self.received:
@@ -57,9 +68,9 @@ class fullMap():
     def findPath(self, start, finish):  
 
         while True:
-
             if self.received:   
                 self.finish = finish
+                self.start = start
                 firstNode = mapNode(start)
                 self.openList.append(firstNode)
                 self.current = firstNode
@@ -68,18 +79,19 @@ class fullMap():
 
     def getPath(self,current):
         
-        rospy.loginfo("Got path")
-        self.path.header.frame_id = 'map'
-        self.path.header.stamp = rospy.Time(0)
+        # rospy.loginfo("Got path")
+        self.started = False
+
+        pathTemp = Path()
+        pathTemp.header.frame_id = 'map'
+        pathTemp.header.stamp = rospy.Time(0)
 
         backTrack = current
-
-        tempIn = 0
 
         while backTrack.parent != None:
 
             mapMarker = Marker()
-            mapMarker.id = tempIn
+            mapMarker.id = self.pathIncrement
             mapMarker.header.frame_id = "map"
             mapMarker.type = mapMarker.SPHERE
             mapMarker.action = mapMarker.ADD
@@ -93,7 +105,9 @@ class fullMap():
             mapMarker.color.r = 0.0
             mapMarker.color.g = 0.0
             mapMarker.color.b = 1.0
-            mapMarker.lifetime = rospy.Time(5)
+            mapMarker.lifetime = rospy.Time(10)
+
+            self.distanceSum(backTrack.position)
 
             self.pathMarkers.markers.append(mapMarker)
 
@@ -102,14 +116,104 @@ class fullMap():
             tempPose.position.z = 0
             tempPose.position.x = backTrack.position.x
             tempPose.position.y = backTrack.position.y
-            temp.header.frame_id = "Path: " + str(tempIn)
+            temp.header.frame_id = "Path: " + str(self.pathIncrement)
             temp.header.stamp = rospy.Time(0)
-            tempIn += 1
+            self.pathIncrement += 1
             temp.pose = tempPose
-            self.path.poses.append(temp)
+            pathTemp.poses.append(temp)
             backTrack = backTrack.parent
+        pathTemp.poses.reverse()
+
+        for pose in pathTemp.poses:
+            self.path.poses.append(pose)
+        
+
+        
+        # mapMarker = Marker()
+        # mapMarker.id = self.pathIncrement
+        # mapMarker.header.frame_id = "map"
+        # mapMarker.type = mapMarker.SPHERE
+        # mapMarker.action = mapMarker.ADD
+        # mapMarker.scale.x = 5
+        # mapMarker.scale.y = 5
+        # mapMarker.scale.z = 5
+        # mapMarker.pose.position.z = 0
+        # mapMarker.pose.position.x = self.start.x
+        # mapMarker.pose.position.y = self.start.y
+        # mapMarker.color.a = 1.0
+        # mapMarker.color.r = 1.0
+        # mapMarker.color.g = 0.0
+        # mapMarker.color.b = 0.0
+        # mapMarker.lifetime = rospy.Time(10)
+
+        # self.pathMarkers.markers.append(mapMarker)
+
+        # mapMarker2 = Marker()
+        # mapMarker2.id = self.pathIncrement + 1
+        # mapMarker2.header.frame_id = "map"
+        # mapMarker2.type = mapMarker2.SPHERE
+        # mapMarker2.action = mapMarker2.ADD
+        # mapMarker2.scale.x = 5
+        # mapMarker2.scale.y = 5
+        # mapMarker2.scale.z = 5
+        # mapMarker2.pose.position.z = 0
+        # mapMarker2.pose.position.x = self.finish.x
+        # mapMarker2.pose.position.y = self.finish.y
+        # mapMarker2.color.a = 1.0
+        # mapMarker2.color.r = 1.0
+        # mapMarker2.color.g = 0.0
+        # mapMarker2.color.b = 0.0
+        # mapMarker2.lifetime = rospy.Time(10)
+
+        # self.pathMarkers.markers.append(mapMarker2)
+
+        if not self.fullPathFound:
+            self.increment()
+
+    def increment(self):
+        
+        self.publishPath()
+        self.openList.clear()
+        self.closedList.clear()
+        if self.goalIncrement == 3:
+            self.findPath(self.goals[self.goalIncrement], self.goals[0])
+            self.fullPathFound = True
+            self.algorithmTest()
+            self.reset()
+        else:
+            self.findPath(self.goals[self.goalIncrement], self.goals[self.goalIncrement + 1])
+            self.pathfound = False
+
+        self.goalIncrement += 1
+
+    def reset(self):
+        if self.resetCounter < 100:
+            self.startTime = time.time()
+            self.goalIncrement = -1
+            self.size = 0
+            self.pathIncrement = 0
+            self.distSum = 0.0
+            self.fullPathFound = False
+            self.pathfound = False
+            self.pathDrawn = False
+            self.received = False
+            self.resetCounter += 1
+        else:
+            rospy.loginfo(timeLog)
+            # rospy.loginfo(distanceLog)
+
+    
+    def algorithmTest(self):
+        # rospy.loginfo(self.distSum)
+        distanceLog.append(self.distSum)
+        totalTime = time.time() - self.startTime
+        timeLog.append(totalTime)
+        # rospy.loginfo("Seconds: " + str(totalTime.secs) + "." + str(totalTime.nsecs))
 
 
+    def distanceSum(self, nextPoint):
+        self.distSum += self.getDist(self.lastPoint, nextPoint)
+        self.lastPoint = nextPoint
 
     def findPathLoop(self, event=None):
 
@@ -118,8 +222,7 @@ class fullMap():
                 if not self.pathfound:
                     self.current = self.getMin()
                     self.addAdjacent(self.current)
-                else:
-                    self.publishPath()
+                    
 
     def publishPath(self):
         self.pathSolutionPublisherMarkers.publish(self.pathMarkers)
@@ -146,7 +249,7 @@ class fullMap():
     def checkViability(self,position):
 
         for obstacle in self.objects.markers:
-            if self.getDist(obstacle.pose.position,position) < self.delta*15:
+            if self.getDist(obstacle.pose.position,position) < self.delta*6:
                 return False
         for point in self.openList:
             if self.getDist(point.position, position) < self.delta:
@@ -264,8 +367,6 @@ class fullMap():
 
     def outputMap(self, event=None):
 
-        
-
         mapArray = MarkerArray()
         count = 0
 
@@ -291,7 +392,7 @@ class fullMap():
 
             mapMarker.color.b = 1.0
             mapMarker.color.g = 1.0
-            mapMarker.lifetime = rospy.Time(5)
+            mapMarker.lifetime = rospy.Time(10)
 
             mapArray.markers.append(mapMarker)
             count += 1
@@ -319,7 +420,7 @@ class fullMap():
             mapMarker.color.b = 0.5
             mapMarker.color.g = 0.5
             mapMarker.color.r = 0.5
-            mapMarker.lifetime = rospy.Time(5)
+            mapMarker.lifetime = rospy.Time(10)
 
             mapArray.markers.append(mapMarker)
             count += 1
@@ -330,23 +431,29 @@ class fullMap():
 if __name__ == '__main__':
     try:
         rospy.init_node('Map', anonymous=True)
-        full_Map = fullMap()
-        leftTop = Vector3()
+        goals = []
+        # Basic map
+        goals.append(Vector3(0.0,180.0,0.0))
+        goals.append(Vector3(180.0,0.0,0.0))
+        goals.append(Vector3(0.0,-180.0,0.0))
+        goals.append(Vector3(-180.0,0.0,0.0))
+
+        # Advanced map
+
+        # goals.append(Vector3(0.0,180.0,0.0))
+        # goals.append(Vector3(780.0,150.0,0.0))
+        # goals.append(Vector3(675.0,0.0,0.0))
+        # goals.append(Vector3(780.0,-150.0,0.0))
+        # goals.append(Vector3(0.0,-180.0,0.0))
+        # goals.append(Vector3(-180.0,0.0,0.0))
+
+        full_Map = fullMap(goals)
+
+        full_Map.increment()
         
         rospy.Timer(rospy.Duration(0.1), full_Map.outputMap)
 
-        start = Vector3()
-        start.x = -225
-        start.y = 0.0
-        start.z = 0.0
-
-        finish = Vector3()
-        finish.x = 225
-        finish.y = 0.0
-        finish.z = 0.0
-        full_Map.findPath(start,finish)
-
-        rospy.Timer(rospy.Duration(0.001), full_Map.findPathLoop)
+        rospy.Timer(rospy.Duration(0.0001), full_Map.findPathLoop)
         rospy.spin()
         
     except rospy.ROSInterruptException:

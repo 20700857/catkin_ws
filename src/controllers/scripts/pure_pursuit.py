@@ -16,10 +16,10 @@ from nav_msgs.msg import Path
 
 # Parameters
 k = 0.1  # look forward gain
-Lfc = 2.0  # [m] look-ahead distance
+Lfc = 4.0  # [m] look-ahead distance
 Kp = 1.0  # speed proportional gain
 dt = 0.1  # [s] time tick
-WB = 2.9  # [m] wheel base of vehicle
+WB = 2  # [m] wheel base of vehicle
 
 show_animation = True
 
@@ -27,6 +27,7 @@ show_animation = True
 client = airsim.CarClient()
 client.confirmConnection()
 car_controls = airsim.CarControls()
+client.enableApiControl(True)
 
 class State:
 
@@ -41,16 +42,21 @@ class State:
     def update(self, a, delta):
 
         car_state = client.getCarState()
-        self.x = car_state.kinematics_estimated.position.x_val
+        self.x = (car_state.kinematics_estimated.position.x_val*100)/10
         # self.x += self.v * math.cos(self.yaw) * dt
-        self.y = -car_state.kinematics_estimated.position.y_val
+        self.y = -(car_state.kinematics_estimated.position.y_val*100 - 2000)/10
         # self.y += self.v * math.sin(self.yaw) * dt
+        car_controls.throttle = a
+
         self.yaw = -car_state.kinematics_estimated.orientation.w_val
         # self.yaw += self.v / WB * math.tan(delta) * dt
         self.v = car_state.speed
         # self.v += a * dt
+        car_controls.steering = -self.v / WB * math.tan(delta) * dt*3
         self.rear_x = self.x - ((WB / 2) * math.cos(self.yaw))
         self.rear_y = self.y - ((WB / 2) * math.sin(self.yaw))
+
+        client.setCarControls(car_controls)
 
     def calc_distance(self, point_x, point_y):
         dx = self.rear_x - point_x
@@ -162,12 +168,12 @@ class mainPart:
 
         self.target_speed = 10.0 / 3.6  # [m/s]
 
-        self.T = 10000.0  # max simulation time
+        self.T = 100000.0  # max simulation time
 
         self.cx = []
         self.cy = []
         # initial state
-        self.state = State(x=-225, y=0, yaw=0.0, v=0.0)
+        self.state = State(x=0, y=200, yaw=0.0, v=0.0)
 
         data = MarkerArray()
         data = rospy.wait_for_message('/Path_Solution_Points', MarkerArray)
