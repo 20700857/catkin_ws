@@ -31,13 +31,15 @@ class fullMap():
     def __init__(self,goals):
         self.resetCounter = 0
         self.goals = goals
-        self.rangeX = 1000
-        self.rangeY = 1000
+        self.rangeX = [1000,900,800,700,600,500,400,300,200,100,50,25,10,5,1]
+        self.rangeY = [1000,900,800,700,600,500,400,300,200,100,50,25,10,5,1]
+        self.rangeIndex = 0
         self.delta = 5
         self.pathPoints = MarkerArray()
         self.path = Path()
         self.path.header.frame_id = 'map'
         self.path.header.stamp = rospy.Time(0)
+        self.run = True
 
         self.reset()
 
@@ -55,12 +57,16 @@ class fullMap():
 
         self.objects = MarkerArray()
         self.subscriber = rospy.Subscriber('/Obstacles', MarkerArray, self.updateObjects)
+        self.publishTime = True
+        
+        self.lastPoint = self.goals[self.currentGoal]
 
     def increment(self):
         
         self.explored.clear()
         self.explored.append(mapNode(goals[self.currentGoal], None, 0))
-        if self.currentGoal == 5:
+        self.rangeIndex = 0
+        if self.currentGoal == 3:
             self.fullPathFound = True
             self.algorithmTest()
             self.reset()
@@ -70,7 +76,7 @@ class fullMap():
         self.pathFound = False 
 
     def reset(self):
-        if self.resetCounter < 10:
+        if self.resetCounter < 1:
             self.startTime = time.time()
             self.currentGoal = -1
             self.size = 0
@@ -83,7 +89,10 @@ class fullMap():
             self.path.poses.clear()
             rospy.loginfo("Itteration")
         else:
-            rospy.loginfo(timeLog)
+            self.run = False
+            if self.publishTime:
+                rospy.loginfo(distanceLog)
+                self.publishTime = False
             # rospy.loginfo(distanceLog)
 
     
@@ -107,16 +116,24 @@ class fullMap():
                 x.cost = x.parent.cost + self.getDist(x.parent.location,x.location)
 
     def addNode(self, event = None):
-        if not self.pathFound:
+        if not self.pathFound and self.run:
             if self.runCount < self.runLimit:
                 #self.rescore()
                 out = Point()
                 #mean = [self.goal.x, self.goal.y]
                 #cov = [[3, 0], [3, 2]]  # diagonal covariance
+
+                loopCount = 0
                 
                 while True:
-                    out.x = (random()-0.5)*self.rangeX + goals[self.currentGoal].x
-                    out.y = (random()-0.5)*self.rangeY + goals[self.currentGoal].y
+                    loopCount += 1
+
+                    if loopCount > 10:
+                        out.x = (random()-0.5)*self.rangeX[0]*2 + goals[self.currentGoal].x
+                        out.y = (random()-0.5)*self.rangeY[0]*2 + goals[self.currentGoal].y
+                    else:
+                        out.x = (random()-0.5)*self.rangeX[self.rangeIndex]*2 + goals[self.currentGoal].x
+                        out.y = (random()-0.5)*self.rangeY[self.rangeIndex]*2 + goals[self.currentGoal].y
                     #out.x , out.y = np.random.multivariate_normal(mean, cov, 1).T
                     out.z = 0
                     nearest = self.nearestNode(out)
@@ -133,7 +150,12 @@ class fullMap():
                 newNode = mapNode(nodeAdded, nearest, nearest.cost + self.delta)
                 self.explored.append(newNode)
                 # self.checkForBetter(newNode)
-                if self.getDistToGoal(nodeAdded) < self.delta*3:
+                dist = self.getDistToGoal(nodeAdded)
+                if dist*2 < self.rangeX[self.rangeIndex]*2:
+                    self.rangeIndex += 1
+                    
+
+                if dist < self.delta*3:
                     
                     self.pathFound = True
                     self.generatePath()
@@ -172,6 +194,7 @@ class fullMap():
                 tempMarker.pose.orientation.w = tempOri[3]
                 tempMarker.lifetime = rospy.Time(1)
                 self.pathPoints.markers.append(tempMarker)
+                self.distanceSum(current.location)
                 
 
                 temp = PoseStamped()
@@ -184,7 +207,7 @@ class fullMap():
                 temp.pose = tempPose
                 pathTemp.poses.append(temp)
                 self.pathIncrement += 1
-
+                old = current
                 current = current.parent
             else:
                 condition = False
@@ -194,6 +217,10 @@ class fullMap():
             self.path.poses.append(pose)
 
         self.increment()
+    
+    def distanceSum(self, nextPoint):
+        self.distSum += self.getDist(self.lastPoint, nextPoint)
+        self.lastPoint = nextPoint
 
     def checkForBetter(self, newNode):
         for node in self.explored:
@@ -297,7 +324,7 @@ class fullMap():
                 tempMarker.pose.orientation.y = tempOri[1]
                 tempMarker.pose.orientation.z = tempOri[2]
                 tempMarker.pose.orientation.w = tempOri[3]
-                tempMarker.lifetime = rospy.Time(1)
+                tempMarker.lifetime = rospy.Time(2)
                 temp.markers.append(tempMarker)
                 idNum += 1
 
@@ -375,20 +402,20 @@ if __name__ == '__main__':
     try:
         rospy.init_node('Map', anonymous=True)
         goals = []
-        # Basic map
-        # goals.append(Vector3(0.0,180.0,0.0))
-        # goals.append(Vector3(180.0,0.0,0.0))
-        # goals.append(Vector3(0.0,-180.0,0.0))
-        # goals.append(Vector3(-180.0,0.0,0.0))
+        # # # Basic map
+        goals.append(Vector3(0.0,180.0,0.0))
+        goals.append(Vector3(180.0,0.0,0.0))
+        goals.append(Vector3(0.0,-180.0,0.0))
+        goals.append(Vector3(-180.0,0.0,0.0))
 
         # Advanced map
 
-        goals.append(Vector3(0.0,180.0,0.0))
-        goals.append(Vector3(780.0,150.0,0.0))
-        goals.append(Vector3(675.0,0.0,0.0))
-        goals.append(Vector3(780.0,-150.0,0.0))
-        goals.append(Vector3(0.0,-180.0,0.0))
-        goals.append(Vector3(-180.0,0.0,0.0))
+        # goals.append(Vector3(0.0,180.0,0.0))
+        # goals.append(Vector3(780.0,150.0,0.0))
+        # goals.append(Vector3(675.0,0.0,0.0))
+        # goals.append(Vector3(780.0,-150.0,0.0))
+        # goals.append(Vector3(0.0,-180.0,0.0))
+        # goals.append(Vector3(-180.0,0.0,0.0))
 
         rrtMap = fullMap(goals)
         rospy.sleep(1)

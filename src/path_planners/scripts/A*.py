@@ -175,7 +175,7 @@ class fullMap():
         self.publishPath()
         self.openList.clear()
         self.closedList.clear()
-        if self.goalIncrement == 3:
+        if self.goalIncrement == 5:
             self.findPath(self.goals[self.goalIncrement], self.goals[0])
             self.fullPathFound = True
             self.algorithmTest()
@@ -187,7 +187,7 @@ class fullMap():
         self.goalIncrement += 1
 
     def reset(self):
-        if self.resetCounter < 100:
+        if self.resetCounter < 1:
             self.startTime = time.time()
             self.goalIncrement = -1
             self.size = 0
@@ -199,7 +199,7 @@ class fullMap():
             self.received = False
             self.resetCounter += 1
         else:
-            rospy.loginfo(timeLog)
+            rospy.loginfo(distanceLog)
             # rospy.loginfo(distanceLog)
 
     
@@ -432,20 +432,20 @@ if __name__ == '__main__':
     try:
         rospy.init_node('Map', anonymous=True)
         goals = []
-        # Basic map
-        goals.append(Vector3(0.0,180.0,0.0))
-        goals.append(Vector3(180.0,0.0,0.0))
-        goals.append(Vector3(0.0,-180.0,0.0))
-        goals.append(Vector3(-180.0,0.0,0.0))
+        # # Basic map
+        # goals.append(Vector3(0.0,180.0,0.0))
+        # goals.append(Vector3(180.0,0.0,0.0))
+        # goals.append(Vector3(0.0,-180.0,0.0))
+        # goals.append(Vector3(-180.0,0.0,0.0))
 
         # Advanced map
 
-        # goals.append(Vector3(0.0,180.0,0.0))
-        # goals.append(Vector3(780.0,150.0,0.0))
-        # goals.append(Vector3(675.0,0.0,0.0))
-        # goals.append(Vector3(780.0,-150.0,0.0))
-        # goals.append(Vector3(0.0,-180.0,0.0))
-        # goals.append(Vector3(-180.0,0.0,0.0))
+        goals.append(Vector3(0.0,180.0,0.0))
+        goals.append(Vector3(780.0,150.0,0.0))
+        goals.append(Vector3(675.0,0.0,0.0))
+        goals.append(Vector3(780.0,-150.0,0.0))
+        goals.append(Vector3(0.0,-180.0,0.0))
+        goals.append(Vector3(-180.0,0.0,0.0))
 
         full_Map = fullMap(goals)
 
