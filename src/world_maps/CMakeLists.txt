@@ -153,7 +153,7 @@ include_directories(
 ## Install ##
 #############
 
-catkin_install_python(PROGRAMS scripts/basic_map.py scripts/advanced_map.py
+catkin_install_python(PROGRAMS scripts/basic_map.py scripts/advanced_map.py scripts/testing_map.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

@@ -8,12 +8,12 @@ from visualization_msgs.msg import MarkerArray
 from visualization_msgs.msg import Marker
 from std_msgs.msg import ColorRGBA
 from nav_msgs.msg import Path
-import random
 import math
 import tf
 from tf import TransformBroadcaster
+from random import random
 
-class BasicWorld():
+class TestingMap():
 
     def __init__(self):
         self.objects = MarkerArray()
@@ -46,50 +46,18 @@ class BasicWorld():
             addingMarker.action = addingMarker.ADD
             addingMarker.type = addingMarker.SPHERE
             addingMarker.color = colourSet
-            addingMarker.lifetime = rospy.Time(10)
             self.objects.markers.append(addingMarker)
             count += 1
 
     def createMap(self):
+        runs = 0
+        while runs < 100:
+            x = (random()-0.5)*600
+            y = (random()-0.5)*600
+            temp = Vector3(x,y,0.0)
+            self.objectPostions.append(temp)
+            x += 1
 
-        for z1 in range(0,2):
-            for z2 in range(int((90 +90*z1)/2),90 +90*z1):
-                x = math.sin(math.radians(z2*(4-2*z1)))*(150.0+150.0*z1)
-                y = math.cos(math.radians(z2*(4-2*z1)))*(150.0+150.0*z1)
-                temp = Vector3(x,y,0.0)
-                self.objectPostions.append(temp)
-
-        for z1 in range(-2,2 + 1):
-            if not z1 == 0:
-                for z2 in range(0,60 + 15*abs(z1) + 1):
-                    x = 10*z2
-                    y = 150*(z1)
-                    temp = Vector3(x,y,0.0)
-                    self.objectPostions.append(temp)
-            else:
-                for z2 in range(0,15 + 1):
-                    x = 900 - 10*z2
-                    y = 0.0
-                    temp = Vector3(x,y,0.0)
-                    self.objectPostions.append(temp)
-        
-        for z1 in range(-1,1 + 1):
-            if not z1 == 0:
-                for z2 in range(0,4 + 1):
-                    x = 150*z2
-                    y = 225*z1
-                    temp = Vector3(x,y,0.0)
-                    self.objectPostions.append(temp)
-        
-        for z1 in range(0,1 + 1):
-            for z2 in range(-15 -15*z1, 15 + 15*z1 + 1):
-                x = 600 + 300*z1
-                y = 10*z2
-                temp = Vector3(x,y,0.0)
-                self.objectPostions.append(temp)
-                      
-    
-                
 
 
     def outputMap(self, event=None):
@@ -100,7 +68,7 @@ class BasicWorld():
 if __name__ == '__main__':
     try:
         rospy.init_node('Basic_World', anonymous=True)
-        output = BasicWorld()
+        output = TestingMap()
         
 
         rospy.Timer(rospy.Duration(0.01), output.outputMap)

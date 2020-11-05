@@ -59,7 +59,6 @@ class fullMap():
         self.lastPoint = self.goals[self.goalIncrement]
 
         
-
     def updateObjects(self, data):
         if not self.received:
             self.objects = data
@@ -86,6 +85,8 @@ class fullMap():
         pathTemp.header.frame_id = 'map'
         pathTemp.header.stamp = rospy.Time(0)
 
+        pathMarkersTemp = MarkerArray()
+
         backTrack = current
 
         while backTrack.parent != None:
@@ -105,11 +106,10 @@ class fullMap():
             mapMarker.color.r = 0.0
             mapMarker.color.g = 0.0
             mapMarker.color.b = 1.0
-            mapMarker.lifetime = rospy.Time(10)
 
             self.distanceSum(backTrack.position)
 
-            self.pathMarkers.markers.append(mapMarker)
+            pathMarkersTemp.markers.append(mapMarker)
 
             temp = PoseStamped()
             tempPose = Pose()
@@ -123,6 +123,10 @@ class fullMap():
             pathTemp.poses.append(temp)
             backTrack = backTrack.parent
         pathTemp.poses.reverse()
+        pathMarkersTemp.markers.reverse()
+
+        for markers in pathMarkersTemp.markers:
+            self.pathMarkers.markers.append(markers)
 
         for pose in pathTemp.poses:
             self.path.poses.append(pose)
@@ -175,7 +179,7 @@ class fullMap():
         self.publishPath()
         self.openList.clear()
         self.closedList.clear()
-        if self.goalIncrement == 5:
+        if self.goalIncrement == 3:
             self.findPath(self.goals[self.goalIncrement], self.goals[0])
             self.fullPathFound = True
             self.algorithmTest()
@@ -187,7 +191,7 @@ class fullMap():
         self.goalIncrement += 1
 
     def reset(self):
-        if self.resetCounter < 1:
+        if self.resetCounter < 0:
             self.startTime = time.time()
             self.goalIncrement = -1
             self.size = 0
@@ -225,7 +229,14 @@ class fullMap():
                     
 
     def publishPath(self):
-        self.pathSolutionPublisherMarkers.publish(self.pathMarkers)
+        if len(self.pathMarkers.markers) > 0:
+            self.pathSolutionPublisherMarkers.publish(self.pathMarkers)
+            # old = self.pathMarkers.markers[0].pose.position
+            # for marker in self.pathMarkers.markers:
+            #     distance = math.sqrt((old.x - marker.pose.position.x)**2 + (old.y - marker.pose.position.y)**2)
+            #     print(distance) 
+            #     old = marker.pose.position
+
         self.pathSolutionPublisher.publish(self.path)
         # br = TransformBroadcaster()
         # temp = 0
@@ -249,7 +260,7 @@ class fullMap():
     def checkViability(self,position):
 
         for obstacle in self.objects.markers:
-            if self.getDist(obstacle.pose.position,position) < self.delta*6:
+            if self.getDist(obstacle.pose.position,position) < self.delta*9:
                 return False
         for point in self.openList:
             if self.getDist(point.position, position) < self.delta:
@@ -426,6 +437,7 @@ class fullMap():
             count += 1
 
         self.pathSearchPublisher.publish(mapArray)
+        self.publishPath()
 
 
 if __name__ == '__main__':
@@ -433,19 +445,23 @@ if __name__ == '__main__':
         rospy.init_node('Map', anonymous=True)
         goals = []
         # # Basic map
-        # goals.append(Vector3(0.0,180.0,0.0))
-        # goals.append(Vector3(180.0,0.0,0.0))
-        # goals.append(Vector3(0.0,-180.0,0.0))
-        # goals.append(Vector3(-180.0,0.0,0.0))
+        goals.append(Vector3(200.0,0.0,0.0))
+        goals.append(Vector3(0.0,-200.0,0.0))
+        goals.append(Vector3(-200.0,0.0,0.0))
+        goals.append(Vector3(0.0,200.0,0.0))
 
         # Advanced map
 
-        goals.append(Vector3(0.0,180.0,0.0))
-        goals.append(Vector3(780.0,150.0,0.0))
-        goals.append(Vector3(675.0,0.0,0.0))
-        goals.append(Vector3(780.0,-150.0,0.0))
-        goals.append(Vector3(0.0,-180.0,0.0))
-        goals.append(Vector3(-180.0,0.0,0.0))
+        # goals.append(Vector3(0.0,180.0,0.0))
+        # goals.append(Vector3(780.0,150.0,0.0))
+        # goals.append(Vector3(675.0,0.0,0.0))
+        # goals.append(Vector3(780.0,-150.0,0.0))
+        # goals.append(Vector3(0.0,-180.0,0.0))
+        # goals.append(Vector3(-180.0,0.0,0.0))
+
+        # A* implementation testing
+        # goals.append(Vector3(-500.0,-500.0,0.0))
+        # goals.append(Vector3(500.0,500.0,0.0))
 
         full_Map = fullMap(goals)
 

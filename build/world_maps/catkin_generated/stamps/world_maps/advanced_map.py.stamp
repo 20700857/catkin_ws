@@ -103,7 +103,7 @@ if __name__ == '__main__':
         output = BasicWorld()
         
 
-        rospy.Timer(rospy.Duration(1), output.outputMap)
+        rospy.Timer(rospy.Duration(0.01), output.outputMap)
 
         rospy.spin()
         

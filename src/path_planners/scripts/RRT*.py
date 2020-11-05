@@ -66,7 +66,7 @@ class fullMap():
         self.explored.clear()
         self.explored.append(mapNode(goals[self.currentGoal], None, 0))
         self.rangeIndex = 0
-        if self.currentGoal == 3:
+        if self.currentGoal == 5:
             self.fullPathFound = True
             self.algorithmTest()
             self.reset()
@@ -403,19 +403,19 @@ if __name__ == '__main__':
         rospy.init_node('Map', anonymous=True)
         goals = []
         # # # Basic map
-        goals.append(Vector3(0.0,180.0,0.0))
-        goals.append(Vector3(180.0,0.0,0.0))
-        goals.append(Vector3(0.0,-180.0,0.0))
-        goals.append(Vector3(-180.0,0.0,0.0))
+        # goals.append(Vector3(0.0,180.0,0.0))
+        # goals.append(Vector3(180.0,0.0,0.0))
+        # goals.append(Vector3(0.0,-180.0,0.0))
+        # goals.append(Vector3(-180.0,0.0,0.0))
 
         # Advanced map
 
-        # goals.append(Vector3(0.0,180.0,0.0))
-        # goals.append(Vector3(780.0,150.0,0.0))
-        # goals.append(Vector3(675.0,0.0,0.0))
-        # goals.append(Vector3(780.0,-150.0,0.0))
-        # goals.append(Vector3(0.0,-180.0,0.0))
-        # goals.append(Vector3(-180.0,0.0,0.0))
+        goals.append(Vector3(0.0,180.0,0.0))
+        goals.append(Vector3(780.0,150.0,0.0))
+        goals.append(Vector3(675.0,0.0,0.0))
+        goals.append(Vector3(780.0,-150.0,0.0))
+        goals.append(Vector3(0.0,-180.0,0.0))
+        goals.append(Vector3(-180.0,0.0,0.0))
 
         rrtMap = fullMap(goals)
         rospy.sleep(1)
