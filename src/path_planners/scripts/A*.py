@@ -54,7 +54,7 @@ class fullMap():
         self.objects = MarkerArray()
         self.subscriber = rospy.Subscriber('/Obstacles', MarkerArray, self.updateObjects)
 
-        self.delta = 5.0
+        self.delta = 3.0
 
         self.lastPoint = self.goals[self.goalIncrement]
 
@@ -260,7 +260,7 @@ class fullMap():
     def checkViability(self,position):
 
         for obstacle in self.objects.markers:
-            if self.getDist(obstacle.pose.position,position) < self.delta*9:
+            if self.getDist(obstacle.pose.position,position) < self.delta*10:
                 return False
         for point in self.openList:
             if self.getDist(point.position, position) < self.delta:
@@ -449,6 +449,10 @@ if __name__ == '__main__':
         goals.append(Vector3(0.0,-200.0,0.0))
         goals.append(Vector3(-200.0,0.0,0.0))
         goals.append(Vector3(0.0,200.0,0.0))
+
+        # goals.append(Vector3(200.0,0.0,0.0))
+        # goals.append(Vector3(173.205,-100,0.0))
+        # goals.append(Vector3(-173.205,100,0.0))
 
         # Advanced map
 

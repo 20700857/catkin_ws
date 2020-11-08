@@ -35,8 +35,8 @@ class Unreal():
             addingMarker = Marker()
             addingMarker.id = 0
             addingMarker.header.frame_id = 'map'
-            addingMarker.pose.position.x = self.car_state.position.x_val - 20
-            addingMarker.pose.position.y = -self.car_state.position.y_val
+            addingMarker.pose.position.x = self.car_state.position.x_val*10
+            addingMarker.pose.position.y = -(self.car_state.position.y_val -20)*10
             addingMarker.pose.position.z = self.car_state.position.z_val
             addingMarker.pose.orientation.x = self.car_state.orientation.x_val
             addingMarker.pose.orientation.y = self.car_state.orientation.y_val

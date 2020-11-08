@@ -16,9 +16,9 @@ from nav_msgs.msg import Path
 import time
 
 # Parameters
-k = 4  # look forward gain
+k = 2  # look forward gain
 Kp_angle = 40 # angular gain
-Lfc = 10.0  # [m] look-ahead distance
+Lfc = 4.0  # [m] look-ahead distance
 Kp = 7  # speed proportional gain
 dt = 0.1  # [s] time tick
 WB = 2  # [m] wheel base of vehicle
@@ -65,9 +65,9 @@ class State:
     def update(self, a, delta):
 
         car_state = getTelemetries()
-        self.x = (car_state.kinematics_estimated.position.x_val*10)
+        self.x = (car_state.kinematics_estimated.position.x_val -18)*10
         # self.x += self.v * math.cos(self.yaw) * dt
-        self.y = -(car_state.kinematics_estimated.position.y_val - 20)*10
+        self.y = -(car_state.kinematics_estimated.position.y_val)*10
         # self.y += self.v * math.sin(self.yaw) * dt
         car_controls.throttle = a * dt
 
@@ -227,8 +227,8 @@ class TargetCourse:
         # To speed up nearest point search, doing it at only first time.
         if self.old_nearest_point_index is None:
             # search nearest point index
-            dx = [state.rear_x - icx for icx in self.cx]
-            dy = [state.rear_y - icy for icy in self.cy]
+            # dx = [state.rear_x - icx for icx in self.cx]
+            # dy = [state.rear_y - icy for icy in self.cy]
             # d = np.hypot(dx, dy)
             # ind = np.argmin(d)
             ind = 0
@@ -280,9 +280,16 @@ def pure_pursuit_steer_control(state, trajectory, pind):
     Position_Error[2].append(rospy.get_time())
 
     alpha = (math.atan2(yDiff, xDiff) - state.yaw)
+    if abs(alpha) > math.pi:
+        if alpha > 0:        
+            Angular_Error[0].append(alpha - math.pi)
+        else:
+            Angular_Error[0].append(alpha + math.pi)
 
-
-    Angular_Error[0].append(alpha)
+    else:
+        Angular_Error[0].append(alpha)
+        
+    
     Angular_Error[1].append(rospy.get_time())
     
 
@@ -310,14 +317,14 @@ class mainPart:
 
         self.gotPath = False
 
-        self.target_speed = 6  # [m/s]
+        self.target_speed = 3  # [m/s]
 
         self.T = 100000.0  # max simulation time
 
         self.cx = []
         self.cy = []
         # initial state
-        self.state = State(x=0, y=200, yaw=0.0, v=0.0)
+        self.state = State(x=-180, y=0, yaw=0.0, v=0.0)
 
         data = MarkerArray()
         data = rospy.wait_for_message('/Path_Solution_Points', MarkerArray)
@@ -325,6 +332,11 @@ class mainPart:
         for point in data.markers:
             self.cx.append(point.pose.position.x)
             self.cy.append(point.pose.position.y)
+            # rospy.loginfo("x")
+            # rospy.loginfo(point.pose.position.x)
+            # rospy.loginfo("y")
+            # rospy.loginfo(point.pose.position.y)
+        
 
         self.lastIndex = len(self.cx) - 1
         self.time = 0.0
@@ -342,8 +354,8 @@ class mainPart:
         self.start_time = rospy.get_time()
 
     def reset(self):
-        self.target_ind = 0
-        self.state = State(x=0, y=200, yaw=0.0, v=0.0)
+        self.target_ind = 1
+        self.state = State(x=-180, y=0, yaw=math.pi/2, v=0.0)
         self.states.clear()
         self.states.append(self.time, self.state)
         self.target_course = TargetCourse(self.cx, self.cy)
@@ -445,33 +457,34 @@ class mainPart:
             # plt.plot([0, 25], [6, 6], 'k-', lw=1, color='red')
             # fig.savefig('Velocity_Graph.png')
 
-            # Position_Error[2] = [x - self.start_time for x in Position_Error[2]]
+            Position_Error[2] = [x - self.start_time for x in Position_Error[2]]
 
-            # fig, ax = plt.subplots(figsize=(8, 6), dpi=200)
-            # ax.set_xlabel("Time (Seconds)")
-            # ax.set_ylabel("Position Difference (m)")
-            # ax.grid()
-            # ax.plot(Position_Error[2],Position_Error[0], lw=1, color='blue')
-            # ax.plot(Position_Error[2],Position_Error[1], lw=1, color='red')
-            # fig.savefig('Position_Error_Graph.png')
+            fig, ax = plt.subplots(figsize=(8, 6), dpi=200)
+            ax.set_xlabel("Time (Seconds)")
+            ax.set_ylabel("Position Difference (m)")
+            ax.grid()
+            ax.plot(Position_Error[2],Position_Error[0], lw=1, color='blue', label='Y Difference')
+            ax.plot(Position_Error[2],Position_Error[1], lw=1, color='red', label='X Difference')
+            ax.legend()
+            fig.savefig('Position_Error_Graph.png')
 
-            # Angular_Error[1] = [x - self.start_time for x in Angular_Error[1]]
+            Angular_Error[1] = [x - self.start_time for x in Angular_Error[1]]
 
-            # fig, ax = plt.subplots(figsize=(8, 6), dpi=200)
-            # ax.set_xlabel("Time (Seconds)")
-            # ax.set_ylabel("Angular Error (Radians)")
-            # ax.grid()
-            # ax.plot(Angular_Error[1],Angular_Error[0], lw=1, color='blue')
-            # fig.savefig('Angular_Error_Graph.png')
+            fig, ax = plt.subplots(figsize=(8, 6), dpi=200)
+            ax.set_xlabel("Time (Seconds)")
+            ax.set_ylabel("Angular Error (Radians)")
+            ax.grid()
+            ax.plot(Angular_Error[1],Angular_Error[0], lw=1, color='blue')
+            fig.savefig('Angular_Error_Graph.png')
 
-            # Steering_Effort[1] = [x - self.start_time for x in Steering_Effort[1]]
+            Steering_Effort[1] = [x - self.start_time for x in Steering_Effort[1]]
 
-            # fig, ax = plt.subplots(figsize=(8, 6), dpi=200)
-            # ax.set_xlabel("Time (Seconds)")
-            # ax.set_ylabel("Steering Effort")
-            # ax.grid()
-            # ax.plot(Steering_Effort[1],Steering_Effort[0], lw=1, color='blue')
-            # fig.savefig('Steering_Effort_Graph.png')
+            fig, ax = plt.subplots(figsize=(8, 6), dpi=200)
+            ax.set_xlabel("Time (Seconds)")
+            ax.set_ylabel("Steering Effort")
+            ax.grid()
+            ax.plot(Steering_Effort[1],Steering_Effort[0], lw=1, color='blue')
+            fig.savefig('Steering_Effort_Graph.png')
 
             rospy.loginfo("Restarting")
 

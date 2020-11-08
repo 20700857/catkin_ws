@@ -51,13 +51,22 @@ class TestingMap():
 
     def createMap(self):
         runs = 0
-        while runs < 100:
-            x = (random()-0.5)*600
-            y = (random()-0.5)*600
+        while runs < 200:
+            x = (random()-0.5)*900
+            y = (random()-0.5)*900
             temp = Vector3(x,y,0.0)
-            self.objectPostions.append(temp)
-            x += 1
+            if self.distanceCheck(temp):
+                self.objectPostions.append(temp)
+                runs += 1
+            
+    def distanceCheck(self,pointIn):
 
+        for point in self.objectPostions:
+            dist = math.sqrt((pointIn.x-point.x)**2 + (pointIn.y-point.y)**2)
+            if dist < 5*8:
+                return False
+        
+        return True
 
 
     def outputMap(self, event=None):

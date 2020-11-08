@@ -403,10 +403,10 @@ if __name__ == '__main__':
         rospy.init_node('Map', anonymous=True)
         goals = []
         # # # Basic map
-        # goals.append(Vector3(0.0,180.0,0.0))
-        # goals.append(Vector3(180.0,0.0,0.0))
-        # goals.append(Vector3(0.0,-180.0,0.0))
-        # goals.append(Vector3(-180.0,0.0,0.0))
+        # goals.append(Vector3(200.0,0.0,0.0))
+        # goals.append(Vector3(0.0,-200.0,0.0))
+        # goals.append(Vector3(-200.0,0.0,0.0))
+        # goals.append(Vector3(0.0,200.0,0.0))
 
         # Advanced map
 
